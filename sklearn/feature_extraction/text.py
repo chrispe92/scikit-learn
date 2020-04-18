@@ -1109,6 +1109,8 @@ class CountVectorizer(_VectorizerMixin, BaseEstimator):
             feature_counter = {}
             for feature in analyze(doc):
                 try:
+                    if fixed_vocab and feature not in vocabulary:
+                        vocabulary[feature] = len(vocabulary)
                     feature_idx = vocabulary[feature]
                     if feature_idx not in feature_counter:
                         feature_counter[feature_idx] = 1
@@ -1200,26 +1202,22 @@ class CountVectorizer(_VectorizerMixin, BaseEstimator):
 
         if self.binary:
             X.data.fill(1)
-
-        if not self.fixed_vocabulary_:
-            n_doc = X.shape[0]
-            max_doc_count = (max_df
-                             if isinstance(max_df, numbers.Integral)
-                             else max_df * n_doc)
-            min_doc_count = (min_df
-                             if isinstance(min_df, numbers.Integral)
-                             else min_df * n_doc)
-            if max_doc_count < min_doc_count:
-                raise ValueError(
-                    "max_df corresponds to < documents than min_df")
-            X, self.stop_words_ = self._limit_features(X, vocabulary,
-                                                       max_doc_count,
-                                                       min_doc_count,
-                                                       max_features)
-
-            X = self._sort_features(X, vocabulary)
-
-            self.vocabulary_ = vocabulary
+        n_doc = X.shape[0]
+        max_doc_count = (max_df
+                            if isinstance(max_df, numbers.Integral)
+                            else max_df * n_doc)
+        min_doc_count = (min_df
+                            if isinstance(min_df, numbers.Integral)
+                            else min_df * n_doc)
+        if max_doc_count < min_doc_count:
+            raise ValueError(
+                "max_df corresponds to < documents than min_df")
+        X, self.stop_words_ = self._limit_features(X, vocabulary,
+                                                    max_doc_count,
+                                                    min_doc_count,
+                                                    max_features)
+        X = self._sort_features(X, vocabulary)
+        self.vocabulary_ = vocabulary
 
         return X
 
